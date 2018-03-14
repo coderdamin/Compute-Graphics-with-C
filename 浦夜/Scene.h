@@ -4,8 +4,9 @@
 #include <stdlib.h>
 #include <algorithm>
 
-#define N 64
+#define N 32
 #define MAX_STEP 8
+#define BIAS 1e-4f
 
 class Scene{
 public:
@@ -43,29 +44,42 @@ public:
 		if (nDepth >= MAX_STEP) {
 			return color;
 		}
+		Entity* pNearEntity = nullptr;
+		float fSquareDistance = 10000.0f;
+		Vector intersectionNear;
+		float fReflectivity = 0.0f;
 		for (auto pEntity : m_ListEntity) {
 			if (pEntity->ContainsPoint(point)) {
 				// 形状内部
-				color = pEntity->GetEmissiveColor();
+				pNearEntity = pEntity;
+				fReflectivity = 0.0f;
 				break;
 			}
-			else if (!pEntity->IsIntersect(point, direct)) {
-				// 不相交
-				continue;
-			}
-			else{
+			else if (pEntity->IsIntersect(point, direct)) {
 				// 正常相交
-				color = pEntity->GetEmissiveColor();
-				// 反射
 				Vector intersection;
 				pEntity->IsIntersect(point, direct, intersection);
-				Vector normal;
-				pEntity->GetNormal(intersection, normal);
-				normal.Normalize();
-				Vector reflexDir = direct - normal * (2 * direct.Cross(normal));
-				color += (GetColor(point, reflexDir, nDepth + 1) * pEntity->GetReflectivity());
-				break;
+				float fSquareLen = (intersection - point).SquareLen();
+				if (fSquareLen < fSquareDistance) {
+					fSquareDistance = fSquareLen;
+					pNearEntity = pEntity;
+					intersectionNear = intersection;
+					fReflectivity = pEntity->GetReflectivity();
+				}
 			}
+		}
+		if (pNearEntity == nullptr) {
+			return color;
+		}
+		// 正常相交
+		color = pNearEntity->GetEmissiveColor();
+		// 反射
+		if (fReflectivity > 0.0f) {
+			Vector normal;
+			pNearEntity->GetNormal(intersectionNear, normal);
+			normal.Normalize();
+			Vector reflexDir = direct - normal * (2 * direct.Cross(normal));
+			color += (GetColor(intersectionNear += reflexDir * BIAS, reflexDir, nDepth + 1) * fReflectivity);
 		}
 		return color;
 	}

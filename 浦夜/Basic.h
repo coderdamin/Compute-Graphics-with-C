@@ -40,6 +40,21 @@ public:
 		}
 		return *this;
 	}
+	Vector& operator+=(Vector& point) {
+		m_fx += point.m_fx;
+		m_fy += point.m_fy;
+		return *this;
+	}
+	Vector& operator/=(float fScale) {
+		if (fScale >= -PRECISION && fScale <= PRECISION) {
+			m_fx = m_fy = 0.0f;
+		}
+		else {
+			m_fx /= fScale;
+			m_fy /= fScale;
+		}
+		return *this;
+	}
 
 	float Len() {
 		return sqrtf(m_fx * m_fx + m_fy * m_fy);

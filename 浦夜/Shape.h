@@ -79,7 +79,7 @@ public:
 	{
 		InitializeNormal();
 	}
-	Plane(Vector& point1, Vector& point2, Vector& pointC) {
+	Plane(const Vector& point1, const Vector& point2, Vector& pointC) {
 		m_fa = point2.m_fy - point1.m_fy;
 		m_fb = point1.m_fx - point2.m_fx;
 		m_fc = point2.m_fx * point1.m_fy - point1.m_fx * point2.m_fy;
@@ -97,17 +97,23 @@ public:
 	}
 	virtual bool IsIntersect(Vector& point, Vector&direct) {
 		float fProj = direct.Cross(m_Normal);
-		//return ((fProj > 0) || ContainsPoint(point));
-		return (fProj > 0);
+		return ((fProj < 0) || ContainsPoint(point));
 	}
 	virtual bool IsIntersect(Vector& point, Vector&direct, Vector&intersection) {
 		intersection.m_fx = intersection.m_fy = 0;
 		float fProj = direct.Cross(m_Normal);
-		if (fProj < 0) {
+		if ((fProj > 0) && (!ContainsPoint(point))) {
 			return false;
 		}
-		float fDistance = m_fa*point.m_fx + m_fb*point.m_fy + m_fc;
-		intersection = point + m_Normal * fDistance;
+		if ((fProj < 0) && (ContainsPoint(point))) {
+			intersection.m_fx = intersection.m_fy = -1.0f;
+			return true;
+		}
+		//float fDistance = m_fa*point.m_fx + m_fb*point.m_fy + m_fc;
+		//intersection = point + m_Normal * fDistance;
+		intersection.m_fx = (m_fb*direct.m_fy*point.m_fx - m_fb * direct.m_fx*point.m_fy - m_fc * direct.m_fx) / (m_fa*direct.m_fx + m_fb * direct.m_fy);
+		if (direct.m_fx) intersection.m_fy = (intersection.m_fx - point.m_fx)*direct.m_fy / direct.m_fx + point.m_fy;
+		else intersection.m_fy = (-m_fc - m_fa * intersection.m_fx) / m_fb;
 		return true;
 	}
 	virtual bool GetNormal(Vector&point, Vector& normal) {
