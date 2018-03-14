@@ -48,11 +48,18 @@ public:
 		return m_pShape->IsIntersect(point, direct);
 	}
 	bool IsIntersect(Vector& point, Vector&direct, Vector&intersection) {
-		intersection.m_fx = intersection.m_fy = 0;
 		if (m_pShape == nullptr) {
+			intersection.m_fx = intersection.m_fy = 0;
 			return false;
 		}
 		return m_pShape->IsIntersect(point, direct, intersection);
+	}
+	bool GetNormal(Vector&point, Vector& normal) {
+		if (m_pShape == nullptr) {
+			normal.m_fx = normal.m_fy = 0;
+			return false;
+		}
+		return m_pShape->GetNormal(point, normal);
 	}
 private:
 	float m_fReflectivity;

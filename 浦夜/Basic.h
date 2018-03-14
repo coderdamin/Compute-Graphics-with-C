@@ -27,7 +27,7 @@ public:
 	}
 	Vector operator*(float fScale) {
 		Vector result;
-		if (fScale < -PRECISION && fScale > PRECISION) {
+		if (fScale < -PRECISION || fScale > PRECISION) {
 			result.m_fx = m_fx * fScale;
 			result.m_fy = m_fy * fScale;
 		}
@@ -53,6 +53,14 @@ public:
 		return m_fx * vec.m_fx + m_fy * vec.m_fy;
 	}
 
+	void Normalize() {
+		float fLen = Len();
+		if (fLen != 0) {
+			m_fx /= fLen;
+			m_fy /= fLen;
+		}
+	}
+
 public:
 	float m_fx, m_fy;
 };
@@ -73,7 +81,7 @@ public:
 	}
 	Color operator*(float fScale) {
 		Color result;
-		if (fScale < -PRECISION && fScale > PRECISION) {
+		if (fScale < -PRECISION || fScale > PRECISION) {
 			result.m_fr = m_fr * fScale;
 			result.m_fg = m_fr * fScale;
 			result.m_fb = m_fr * fScale;

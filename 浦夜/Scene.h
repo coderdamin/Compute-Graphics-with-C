@@ -32,7 +32,7 @@ public:
 		Color color(0.0f, 0.0f, 0.0f);
 		for (int i = 0; i < N; ++i){
 			float a = TWO_PI*(i + (float)rand() / RAND_MAX) / N;
-			color += GetColor(point, Vector(cosf(a), sinf(a)));
+			color += GetColor(point, Vector(cosf(a), -sinf(a)));
 		}
 		color /= N;
 		return color;
@@ -55,11 +55,15 @@ public:
 			}
 			else{
 				// 正常相交
-				Vector intersection;
-				pEntity->IsIntersect(point, direct, intersection);
 				color = pEntity->GetEmissiveColor();
 				// 反射
-				//color += GetColor(point, direct, nDepth + 1) * pEntity->GetReflectivity();
+				Vector intersection;
+				pEntity->IsIntersect(point, direct, intersection);
+				Vector normal;
+				pEntity->GetNormal(intersection, normal);
+				normal.Normalize();
+				Vector reflexDir = direct - normal * (2 * direct.Cross(normal));
+				color += (GetColor(point, reflexDir, nDepth + 1) * pEntity->GetReflectivity());
 				break;
 			}
 		}
