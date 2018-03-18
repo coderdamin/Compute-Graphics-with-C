@@ -232,11 +232,16 @@ public:
 	}
 	virtual bool IsIntersect(Vector& point, Vector&direct) {
 		bool bResult = false;
+		Vector intersection1;
+		Vector intersection2;
 		if (m_pShape1 != nullptr) {
-			bResult = m_pShape1->IsIntersect(point, direct);
+			bResult = m_pShape1->IsIntersect(point, direct, intersection1);
 		}
 		if (bResult && m_pShape2 != nullptr) {
-			bResult = m_pShape2->IsIntersect(point, direct);
+			bResult = m_pShape2->IsIntersect(point, direct, intersection2);
+		}
+		if (bResult) {
+			bResult = m_pShape2->ContainsPoint(intersection1) || m_pShape1->ContainsPoint(intersection2);
 		}
 		return bResult;
 	}
@@ -246,12 +251,28 @@ public:
 		if (m_pShape1 != nullptr) {
 			bResult = m_pShape1->IsIntersect(point, direct, intersection);
 		}
+		Vector intersection2;
 		if (bResult && m_pShape2 != nullptr) {
-			Vector intersection2;
 			bResult = m_pShape2->IsIntersect(point, direct, intersection2);
-			if ((bResult) && (intersection2.SquareLen() < intersection.SquareLen())) {
+		}
+		if (!bResult) {
+			return false;
+		}
+		bool bContains1 = false, bContains2 = false;
+		bContains1 = m_pShape2->ContainsPoint(intersection);
+		bContains2 = m_pShape1->ContainsPoint(intersection2);
+		if (bContains1 && bContains2) {
+			if ((intersection2 - point).SquareLen() < (intersection - point).SquareLen()) {
 				intersection = intersection2;
 			}
+		}
+		else if (bContains1) {
+		}
+		else if (bContains2) {
+			intersection = intersection2;
+		}
+		else {
+			bResult = false;
 		}
 		return bResult;
 	}

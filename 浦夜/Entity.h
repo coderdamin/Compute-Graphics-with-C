@@ -3,12 +3,21 @@
 
 class Entity{
 public:
-	Entity() :m_pShape(nullptr){}
-	Entity(Shape* pShape) :m_pShape(pShape){}
-	Entity(Shape* pShape, Color&color, float fReflectivity=0) 
+	Entity()
+		: m_pShape(nullptr)
+		, m_fReflectivity(0)
+		, m_fRefractivity(0)
+	{}
+	Entity(Shape* pShape)
+		: m_pShape(pShape)
+		, m_fReflectivity(0)
+		, m_fRefractivity(0)
+	{}
+	Entity(Shape* pShape, Color&color, float fReflectivity=0, float fRefractivity = 0)
 		: m_pShape(pShape)
 		, m_EmissiveColor(color)
 		, m_fReflectivity(fReflectivity)
+		, m_fRefractivity(fRefractivity)
 	{}
 	~Entity() {
 		if (m_pShape != nullptr) {
@@ -34,6 +43,12 @@ public:
 	}
 	float GetReflectivity() {
 		return m_fReflectivity;
+	}
+	void SetRefractivity(float fRefractivity) {
+		m_fRefractivity = fRefractivity;
+	}
+	float GetRefractivity() {
+		return m_fRefractivity;
 	}
 	bool ContainsPoint(Vector& point) {
 		if (m_pShape == nullptr) {
@@ -63,6 +78,7 @@ public:
 	}
 private:
 	float m_fReflectivity;
+	float m_fRefractivity;
 	Shape* m_pShape;
 	Color m_EmissiveColor;
 };

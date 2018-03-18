@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <algorithm>
 
-#define N 32
+#define N 64
 #define MAX_STEP 8
 #define BIAS 1e-4f
 
@@ -52,7 +52,10 @@ public:
 			if (pEntity->ContainsPoint(point)) {
 				// 形状内部
 				pNearEntity = pEntity;
-				fReflectivity = 0.0f;
+				//fReflectivity = 0.0f;
+				Vector intersection;
+				pEntity->IsIntersect(point, direct, intersection);
+				intersectionNear = intersection;
 				break;
 			}
 			else if (pEntity->IsIntersect(point, direct)) {
@@ -73,15 +76,43 @@ public:
 		}
 		// 正常相交
 		color = pNearEntity->GetEmissiveColor();
+		// 折射
+		Vector normal;
+		pNearEntity->GetNormal(intersectionNear, normal);
+		normal.Normalize();
+		color += Refract(*pNearEntity, intersectionNear, direct, normal, nDepth + 1);
 		// 反射
 		if (fReflectivity > 0.0f) {
-			Vector normal;
-			pNearEntity->GetNormal(intersectionNear, normal);
-			normal.Normalize();
 			Vector reflexDir = direct - normal * (2 * direct.Cross(normal));
 			color += (GetColor(intersectionNear += reflexDir * BIAS, reflexDir, nDepth + 1) * fReflectivity);
 		}
 		return color;
+	}
+private:
+	Color Refract(Entity&enIns, Vector&point, Vector&direct, Vector&normal, int depth) {
+		Color color(0.0f, 0.0f, 0.0f);
+		float fRefractivity = enIns.GetRefractivity();
+		if (fRefractivity <= 0.0f) {
+			return color;
+		}
+		float idotn = direct.Cross(normal);
+		float eta = fRefractivity / 1.0f; // 与空气间
+		float a = 0.0f;
+		if (idotn > 0.0f) {
+			//t = (n1 / n2)·i - ((n1 / n2)(i·n) + (1 - (n1 / n2) ^ 2(1 - (i·n) ^ 2)) ^ (-2))·n
+			float k = 1.f - eta * eta * (1.0f - idotn * idotn);
+			if (k < 0.0f) {
+				return color;
+			}
+			a = eta * idotn - sqrtf(k);
+		}
+		else {
+			eta = 1.0f / eta;
+			float k = 1.f - eta * eta * (1.0f - idotn * idotn);
+			a = eta * idotn + sqrtf(k);
+		}
+		Vector refract = direct * eta - normal * a;
+		return GetColor(point + refract * BIAS, refract, depth) * fRefractivity;
 	}
 
 private:
